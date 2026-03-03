@@ -23,6 +23,7 @@ import com.simats.gokart.ui.screens.DetailsScreen
 import com.simats.gokart.ui.screens.KartScreen
 import com.simats.gokart.ui.screens.SplashScreen
 import com.simats.gokart.ui.screens.TrackScreen
+import com.simats.gokart.ui.screens.TwinScreen
 import com.simats.gokart.ui.screens.VehicleSelectionScreen
 import com.simats.gokart.ui.theme.GokartTheme
 
@@ -77,6 +78,9 @@ fun MainScreen() {
             composable("track/{vehicleType}", arguments = listOf(navArgument("vehicleType") { type = NavType.StringType })) {
                 TrackScreen(it.arguments?.getString("vehicleType") ?: "ev")
             }
+//            composable(Screen.Twin.route + "/{vehicleType}", arguments = listOf(navArgument("vehicleType") { type = NavType.StringType })) {
+//                TwinScreen(it.arguments?.getString("vehicleType") ?: "ev")
+//            }
         }
     }
 }

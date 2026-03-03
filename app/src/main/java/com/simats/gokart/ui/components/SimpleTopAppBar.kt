@@ -12,7 +12,7 @@ import com.simats.gokart.ui.theme.BgCharcoal
 @Composable
 fun SimpleTopAppBar() {
     TopAppBar(
-        title = { Text("Gokart") },
+        title = { Text("KartRush") },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = BgCharcoal,
             titleContentColor = Color.White

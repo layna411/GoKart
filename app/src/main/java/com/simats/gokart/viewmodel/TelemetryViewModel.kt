@@ -19,6 +19,11 @@ class TelemetryViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
     val uiState: StateFlow<KartData> = _uiState.asStateFlow()
 
     private val vehicleType: String = savedStateHandle.get<String>("vehicleType") ?: "ev"
+    
+    // Local buffers for live trend
+    private val speedHistory = mutableListOf<Float>()
+    private val tempHistory = mutableListOf<Float>()
+    private val maxHistoryPoints = 50
 
     init {
         fetchData()
@@ -31,18 +36,29 @@ class TelemetryViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val map = snapshot.value as? Map<String, Any>
                     map?.let {
+                        val currentSpeed = convertToFloat(it["speed"])
+                        val currentTemp = convertToFloat(it["temp"])
+
+                        // Update local history buffers
+                        speedHistory.add(currentSpeed)
+                        if (speedHistory.size > maxHistoryPoints) speedHistory.removeAt(0)
+                        
+                        tempHistory.add(currentTemp)
+                        if (tempHistory.size > maxHistoryPoints) tempHistory.removeAt(0)
+
                         val kartData = KartData(
                             lat = convertToDouble(it["lat"]),
                             lng = convertToDouble(it["lng"]),
-                            speed = convertToInt(it["speed"]),
+                            speed = currentSpeed.toInt(),
                             distance = convertToDouble(it["distance"]),
-                            temp = convertToDouble(it["temp"]),
+                            temp = currentTemp.toDouble(),
                             battery = convertToIntNullable(it["battery"]),
                             gear = convertToInt(it["gear"]),
                             voltage = convertToFloatNullable(it["voltage"]),
                             sessionTime = convertToFloat(it["sessionTime"]),
-                            speedHistory = convertToFloatList(it["speedHistory"]),
-                            tempHistory = convertToFloatList(it["tempHistory"])
+                            // Use local buffers if Firebase doesn't provide history
+                            speedHistory = speedHistory.toList(),
+                            tempHistory = tempHistory.toList()
                         )
                         _uiState.value = kartData
                     }
@@ -76,19 +92,6 @@ class TelemetryViewModel(private val savedStateHandle: SavedStateHandle) : ViewM
             is Number -> value.toFloat()
             is String -> value.toFloatOrNull() ?: 0.0f
             else -> 0.0f
-        }
-    }
-
-    private fun convertToFloatList(value: Any?): List<Float> {
-        return when (value) {
-            is List<*> -> value.mapNotNull { item ->
-                when (item) {
-                    is Number -> item.toFloat()
-                    is String -> item.toFloatOrNull()
-                    else -> null
-                }
-            }
-            else -> emptyList()
         }
     }
 

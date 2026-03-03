@@ -5,4 +5,5 @@ sealed class Screen(val route: String) {
     object Kart : Screen("kart")
     object Details : Screen("details")
     object Track : Screen("track")
+//    object Twin : Screen("twin")
 }

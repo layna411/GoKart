@@ -1,13 +1,11 @@
 package com.simats.gokart.ui.components
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -25,11 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -205,41 +199,5 @@ fun MetricDetailModal(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun LineChart(data: List<DataPoint>, color: Color) {
-    Canvas(modifier = Modifier.fillMaxSize()) { 
-        val (min, max) = data.minOf { it.value } to data.maxOf { it.value }
-        val path = Path()
-        data.forEachIndexed { i, dataPoint ->
-            val x = i.toFloat() / (data.size - 1) * size.width
-            val y = (1 - (dataPoint.value - min) / (max - min)) * size.height
-            if (i == 0) {
-                path.moveTo(x, y)
-            } else {
-                path.lineTo(x, y)
-            }
-        }
-
-        drawPath(
-            path = path,
-            color = color,
-            style = Stroke(width = 3.dp.toPx())
-        )
-
-        val fillPath = Path()
-        fillPath.addPath(path)
-        fillPath.lineTo(size.width, size.height)
-        fillPath.lineTo(0f, size.height)
-        fillPath.close()
-
-        drawPath(
-            path = fillPath,
-            brush = Brush.verticalGradient(
-                colors = listOf(color.copy(alpha = 0.2f), Color.Transparent)
-            )
-        )
     }
 }

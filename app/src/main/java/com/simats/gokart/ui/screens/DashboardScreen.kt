@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Thermostat
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,6 +38,8 @@ import com.simats.gokart.ui.components.BatteryPanel
 import com.simats.gokart.ui.components.MetricCard
 import com.simats.gokart.ui.components.MetricDetailModal
 import com.simats.gokart.ui.components.SimpleTopAppBar
+import com.simats.gokart.ui.components.SpeedAnalysisDialog
+import com.simats.gokart.ui.components.TemperatureAnalysisDialog
 import com.simats.gokart.ui.components.TrackMap
 import com.simats.gokart.ui.theme.AccentAmber
 import com.simats.gokart.ui.theme.BgCharcoal
@@ -45,6 +48,7 @@ import com.simats.gokart.ui.theme.BorderColor
 import com.simats.gokart.ui.theme.StatusGreen
 import com.simats.gokart.ui.theme.StatusRed
 import com.simats.gokart.viewmodel.TelemetryViewModel
+import kotlinx.coroutines.delay
 
 @Composable
 fun DashboardScreen(
@@ -56,6 +60,14 @@ fun DashboardScreen(
     val scrollState = rememberScrollState()
 
     var selectedMetric by remember { mutableStateOf<String?>(null) }
+    var sessionTime by remember { mutableStateOf(0f) }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(1000)
+            sessionTime++
+        }
+    }
 
     fun formatTime(seconds: Float): String {
         val s = seconds.toInt()
@@ -126,7 +138,7 @@ fun DashboardScreen(
                         MetricCard(
                             icon = Icons.Default.Timer,
                             label = "Time",
-                            value = formatTime(data.sessionTime),
+                            value = formatTime(sessionTime),
                             unit = "MIN",
                             accentColor = StatusGreen,
                             onClick = { selectedMetric = "time" }
@@ -186,43 +198,51 @@ fun DashboardScreen(
             }
         }
 
-        // Modal
-        if (selectedMetric != null) {
-            val metricData = when (selectedMetric) {
-                "speed" -> Triple(data.speed.toString(), "KM/H", "Real-time velocity from rear axle sensor.")
-                "distance" -> Triple("%.2f".format(data.distance / 1000), "KM", "Total distance covered in current session.")
-                "time" -> Triple(formatTime(data.sessionTime), "MIN", "Elapsed time since ignition start.")
-                "temp" -> Triple("%.1f".format(data.temp), "°C", "Core temperature of the electric motor.")
-                "battery" -> Triple(
-                    data.battery?.let { "%.0f".format(it.toFloat()) } ?: "N/A",
-                    "%",
-                    "Battery state of charge at ${data.voltage?.let { "%.1fV".format(it) } ?: "N/A"}."
+        // Modals
+        when (selectedMetric) {
+            "speed" -> {
+                SpeedAnalysisDialog(
+                    isOpen = true,
+                    onClose = { selectedMetric = null },
+                    speed = data.speed.toFloat(),
+                    history = data.speedHistory.map { DataPoint(it) }
                 )
-                "gear" -> Triple(data.gear.toString(), "", "Current gear.")
-                else -> Triple("", "", "")
             }
-
-            val history = when (selectedMetric) {
-                "speed" -> data.speedHistory.mapIndexed { index, value -> DataPoint(index.toLong(), value) }
-                "temp" -> data.tempHistory.mapIndexed { index, value -> DataPoint(index.toLong(), value) }
-                else -> emptyList()
+            "temp" -> {
+                TemperatureAnalysisDialog(
+                    isOpen = true,
+                    onClose = { selectedMetric = null },
+                    temperature = data.temp.toFloat(),
+                    history = data.tempHistory.map { DataPoint(it) }
+                )
             }
-
-            MetricDetailModal(
-                isOpen = true,
-                onClose = { selectedMetric = null },
-                title = selectedMetric ?: "",
-                value = metricData.first,
-                unit = metricData.second,
-                description = metricData.third,
-                history = history,
-                color = when (selectedMetric) {
-                    "distance" -> Color(0xFF3b82f6)
-                    "time" -> StatusGreen
-                    "temp" -> StatusRed
-                    else -> AccentAmber
+            "distance", "time", "battery", "gear" -> {
+                val metricData = when (selectedMetric) {
+                    "distance" -> Triple("%.2f".format(data.distance / 1000), "KM", "Total distance covered in current session.")
+                    "time" -> Triple(formatTime(sessionTime), "MIN", "Elapsed time since ignition start.")
+                    "battery" -> Triple(
+                        data.battery?.let { "%.0f".format(it.toFloat()) } ?: "N/A",
+                        "%",
+                        "Battery state of charge at ${data.voltage?.let { "%.1fV".format(it) } ?: "N/A"}."
+                    )
+                    "gear" -> Triple(data.gear.toString(), "", "Current gear.")
+                    else -> Triple("", "", "")
                 }
-            )
+
+                MetricDetailModal(
+                    isOpen = true,
+                    onClose = { selectedMetric = null },
+                    title = selectedMetric?.uppercase() ?: "",
+                    value = metricData.first,
+                    unit = metricData.second,
+                    description = metricData.third,
+                    color = when (selectedMetric) {
+                        "distance" -> Color(0xFF3b82f6)
+                        "time" -> StatusGreen
+                        else -> AccentAmber
+                    }
+                )
+            }
         }
     }
 }

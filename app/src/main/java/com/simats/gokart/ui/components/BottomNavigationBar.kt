@@ -5,6 +5,7 @@ import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Hardware
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -21,7 +22,9 @@ fun BottomNavigationBar(navController: NavController) {
         Screen.Main to Icons.Filled.GridView,
         Screen.Kart to Icons.Filled.Hardware,
         Screen.Track to Icons.Filled.Map,
+       // Screen.Twin to Icons.Filled.Tune,
         Screen.Details to Icons.Filled.Settings
+
     )
 
     NavigationBar {
